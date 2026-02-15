@@ -1,21 +1,26 @@
 from flask import Flask, render_template, request, redirect, session, url_for, flash, jsonify
 import sqlite3
+import os
+from datetime import datetime
 
 app = Flask(__name__)
 app.secret_key = "super_secure_key_2026"
 
+DATABASE = "database.db"
+
+
 # ==============================
-# DATABASE CONNECTION (SQLite)
+# DATABASE CONNECTION
 # ==============================
 
 def get_db_connection():
-    conn = sqlite3.connect("database.db")
+    conn = sqlite3.connect(DATABASE)
     conn.row_factory = sqlite3.Row
     return conn
 
 
 # ==============================
-# CREATE TABLE IF NOT EXISTS
+# CREATE TABLE (AUTO)
 # ==============================
 
 def init_db():
@@ -29,7 +34,7 @@ def init_db():
             address TEXT NOT NULL,
             mobile TEXT NOT NULL,
             status TEXT DEFAULT 'Waiting',
-            checkin_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            checkin_time TEXT
         )
     """)
     conn.commit()
@@ -51,7 +56,7 @@ def add_header(response):
 
 
 # ==============================
-# HOME PAGE
+# HOME
 # ==============================
 
 @app.route("/")
@@ -60,7 +65,7 @@ def home():
 
 
 # ==============================
-# PATIENT CHECK-IN (AJAX)
+# PATIENT CHECK-IN
 # ==============================
 
 @app.route("/checkin", methods=["POST"])
@@ -72,14 +77,13 @@ def checkin():
     address = request.form.get("address")
     mobile = request.form.get("mobile")
 
-    conn = get_db_connection()
-    cursor = conn.cursor()
+    checkin_time = datetime.now().strftime("%d-%m-%Y %I:%M %p")
 
-    cursor.execute("""
-        INSERT INTO patients 
-        (name, age, gender, address, mobile)
-        VALUES (?, ?, ?, ?, ?)
-    """, (name, age, gender, address, mobile))
+    conn = get_db_connection()
+    cursor = conn.execute("""
+        INSERT INTO patients (name, age, gender, address, mobile, checkin_time)
+        VALUES (?, ?, ?, ?, ?, ?)
+    """, (name, age, gender, address, mobile, checkin_time))
 
     conn.commit()
     token_id = cursor.lastrowid
@@ -106,7 +110,6 @@ def admin():
         password = request.form.get("password")
 
         if email == "admin@gmail.com" and password == "admin123":
-            session.clear()
             session["admin_logged_in"] = True
             return redirect(url_for("dashboard"))
         else:
@@ -116,7 +119,7 @@ def admin():
 
 
 # ==============================
-# DASHBOARD (PROTECTED)
+# DASHBOARD
 # ==============================
 
 @app.route("/dashboard")
@@ -143,7 +146,7 @@ def dashboard():
 
 
 # ==============================
-# CALL PATIENT (AJAX)
+# CALL PATIENT
 # ==============================
 
 @app.route("/call/<int:id>", methods=["POST"])
@@ -154,12 +157,14 @@ def call_patient(id):
 
     conn = get_db_connection()
 
-    # Update status
+    patient = conn.execute("SELECT mobile FROM patients WHERE id=?", (id,)).fetchone()
+
+    if not patient:
+        conn.close()
+        return jsonify({"success": False})
+
     conn.execute("UPDATE patients SET status='Called' WHERE id=?", (id,))
     conn.commit()
-
-    # Get mobile number
-    patient = conn.execute("SELECT mobile FROM patients WHERE id=?", (id,)).fetchone()
     conn.close()
 
     return jsonify({
@@ -169,7 +174,7 @@ def call_patient(id):
 
 
 # ==============================
-# COMPLETE PATIENT (AJAX)
+# COMPLETE PATIENT
 # ==============================
 
 @app.route("/complete/<int:id>", methods=["POST"])
@@ -197,13 +202,17 @@ def print_receipt(id):
         return redirect(url_for("admin"))
 
     conn = get_db_connection()
-    patient = conn.execute("SELECT * FROM patients WHERE id=?", (id,)).fetchone()
+    patient = conn.execute(
+        "SELECT * FROM patients WHERE id=?", 
+        (id,)
+    ).fetchone()
     conn.close()
 
-    if not patient:
-        return "Patient Not Found"
+    if patient is None:
+        return "Patient Not Found", 404
 
     return render_template("print_receipt.html", patient=patient)
+
 
 
 # ==============================
@@ -217,8 +226,9 @@ def logout():
 
 
 # ==============================
-# RUN APP
+# RUN
 # ==============================
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=10000)
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port)
