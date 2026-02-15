@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>OPD Prescription</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 40px;
+            background: white;
+        }
+
+        /* ===== HEADER SECTION ===== */
+
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .header img {
+            width: 120px;
+        }
+
+        .header-center {
+            text-align: center;
+            flex: 1;
+        }
+
+        .header-center h2 {
+            margin: 5px 0;
+        }
+
+        hr {
+            margin: 15px 0;
+            border: 1px solid black;
+        }
+
+        /* ===== CONTENT ===== */
+
+        .row {
+            margin: 12px 0;
+            font-size: 15px;
+        }
+
+        .line {
+            border-bottom: 1px solid black;
+            display: inline-block;
+            min-width: 250px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th, td {
+            border: 1px solid black;
+            padding: 8px;
+            text-align: center;
+        }
+
+        .signature {
+            text-align: right;
+            margin-top: 40px;
+        }
+
+        .print-btn {
+            margin-top: 30px;
+            text-align: center;
+        }
+
+        button {
+            padding: 10px 25px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        /* Hide button in print */
+        @media print {
+            .print-btn {
+                display: none;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<!-- ===== HEADER ===== -->
+<div class="header">
+
+    <!-- LEFT LOGO -->
+    <img src="{{ url_for('static', filename='doctor.jpeg') }}">
+
+    <!-- CENTER TEXT -->
+    <div class="header-center">
+        <h2>Government of Karnataka</h2>
+        <h2>Madhusudan Health Centre, Surathkal</h2>
+        <p>Primary Health Unit</p>
+        <p>Phone: 0824 2475720</p>
+    </div>
+
+    <!-- RIGHT LOGO -->
+    <img src="{{ url_for('static', filename='medicine.jpeg') }}">
+
+</div>
+
+<hr>
+
+<h2 style="text-align:center;">OPD Prescription</h2>
+
+<!-- ===== PATIENT DETAILS ===== -->
+
+<div class="row">
+    OPD No / UHID:
+    <span class="line">{{ patient.id }}</span>
+
+    &nbsp;&nbsp;&nbsp;&nbsp;
+
+    Date:
+    <span class="line">
+        {{ patient.checkin_time.strftime("%d-%m-%Y") }}
+    </span>
+</div>
+
+<div class="row">
+    Patient Name:
+    <span class="line">{{ patient.name }}</span>
+
+    &nbsp;&nbsp;&nbsp;&nbsp;
+
+    Gender:
+    <span class="line">{{ patient.gender }}</span>
+</div>
+
+<div class="row">
+    Age:
+    <span class="line">{{ patient.age }}</span>
+</div>
+
+<div class="row">
+    Address:
+    <span class="line" style="min-width:500px;">
+        {{ patient.address }}
+    </span>
+</div>
+
+<div class="row">
+    Mobile:
+    <span class="line">{{ patient.mobile }}</span>
+</div>
+
+<br>
+
+<h3>Clinical Details:</h3>
+
+<div class="row">
+    BP: _____________________
+    &nbsp;&nbsp;&nbsp;&nbsp;
+    BR: _____________________
+</div>
+
+<div class="row">
+    Temperature: _____________________
+    &nbsp;&nbsp;&nbsp;&nbsp;
+    PR: _____________________
+</div>
+
+<div class="row">
+    RR: _____________________
+</div>
+
+<br>
+
+<h3>Treatment / Medicines:</h3>
+
+<table>
+    <tr>
+        <th>Sl. No</th>
+        <th>Name of Medicine</th>
+        <th>Morning</th>
+        <th>Afternoon</th>
+        <th>Night</th>
+        <th>No. of Days</th>
+    </tr>
+
+    {% for i in range(1,7) %}
+    <tr>
+        <td>{{ i }}</td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+    </tr>
+    {% endfor %}
+</table>
+
+<div class="signature">
+    Doctor's Signature: __________________________
+</div>
+
+<div class="print-btn">
+    <button onclick="window.print()">Print</button>
+</div>
+
+</body>
+</html>

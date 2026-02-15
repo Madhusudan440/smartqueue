@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>SmartQueue Hospital</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<header>
+    <div class="logo">SmartQueue Hospital</div>
+
+    <div class="header-actions">
+        <a href="/admin" class="admin-btn">Admin Login</a>
+
+        <!-- ROUND DARK / LIGHT BUTTON -->
+        <button class="mode-toggle" onclick="toggleMode()" id="modeBtn">
+            🌙
+        </button>
+    </div>
+</header>
+
+<div class="card">
+    <h2>Patient Self Check-In</h2>
+
+    <form id="checkinForm">
+        <input type="text" name="name" placeholder="Full Name" required>
+        <input type="number" name="age" placeholder="Age" required>
+
+        <select name="gender" required>
+            <option value="">Select Gender</option>
+            <option>Male</option>
+            <option>Female</option>
+            <option>Other</option>
+        </select>
+
+        <textarea name="address" placeholder="Full Address" rows="3" required></textarea>
+
+        <input type="text" name="mobile" placeholder="Mobile Number" required>
+
+        <button type="submit">Get Token</button>
+    </form>
+</div>
+
+<footer>
+    © 2026 SmartQueue Hospital Management
+</footer>
+
+<!-- TOKEN POPUP -->
+<div id="tokenPopup" class="popup" style="display:none;">
+    <div class="popup-content">
+        <h2>🎉 Token Booked Successfully</h2>
+        <p id="tokenMessage"></p>
+        <button onclick="closePopup()">OK</button>
+    </div>
+</div>
+
+<script>
+
+/* ================= DARK / LIGHT MODE ================= */
+
+function toggleMode() {
+
+    const body = document.body;
+    const btn = document.getElementById("modeBtn");
+
+    body.classList.toggle("dark-mode");
+
+    if (body.classList.contains("dark-mode")) {
+        btn.innerHTML = "☀️";
+        localStorage.setItem("theme", "dark");
+    } else {
+        btn.innerHTML = "🌙";
+        localStorage.setItem("theme", "light");
+    }
+}
+
+/* LOAD SAVED THEME */
+window.onload = function () {
+
+    const savedTheme = localStorage.getItem("theme");
+    const btn = document.getElementById("modeBtn");
+
+    if (savedTheme === "dark") {
+        document.body.classList.add("dark-mode");
+        btn.innerHTML = "☀️";
+    } else {
+        btn.innerHTML = "🌙";
+    }
+};
+
+/* ================= TOKEN AJAX ================= */
+
+document.getElementById("checkinForm").addEventListener("submit", function(e) {
+    e.preventDefault();
+
+    let formData = new FormData(this);
+
+    fetch("/checkin", {
+        method: "POST",
+        body: formData
+    })
+    .then(res => res.json())
+    .then(data => {
+
+        if (data.success) {
+
+            document.getElementById("tokenMessage").innerHTML =
+                "Your Token Number is <b>#" + data.token +
+                "</b><br><br>Please wait until your number is called.";
+
+            document.getElementById("tokenPopup").style.display = "flex";
+            document.getElementById("checkinForm").reset();
+        }
+    });
+});
+
+function closePopup() {
+    document.getElementById("tokenPopup").style.display = "none";
+}
+
+</script>
+
+</body>
+</html>

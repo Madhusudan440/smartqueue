@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Admin Login - SmartQueue</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<header>
+    <div class="logo">SmartQueue Hospital</div>
+
+    <div class="header-actions">
+        <a href="/" class="admin-btn">⬅ Back to Home</a>
+    </div>
+</header>
+
+<div class="card">
+    <h2>Admin Login</h2>
+
+    <!-- ERROR MESSAGE -->
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            <div style="color:red; text-align:center; margin-bottom:15px; font-weight:600;">
+                {{ messages[0] }}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <form method="POST">
+
+        <input type="email" name="email" placeholder="Admin Email" required>
+
+        <input type="password" name="password" placeholder="Password" required>
+
+        <button type="submit">Login</button>
+
+    </form>
+</div>
+
+<footer>
+    © 2026 SmartQueue Hospital Management
+</footer>
+
+</body>
+</html>

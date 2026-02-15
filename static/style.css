@@ -1,0 +1,365 @@
+/* ================= GLOBAL ================= */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', sans-serif;
+    background: white; /* Light Mode Default */
+    min-height: 100vh;
+    transition: 0.4s ease;
+    color: #222;
+    overflow-x: hidden;
+}
+
+/* ================= HEADER ================= */
+
+header {
+    background: rgba(255,255,255,0.95);
+    backdrop-filter: blur(15px);
+    padding: 18px 40px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+}
+
+.logo {
+    font-size: 22px;
+    font-weight: 700;
+    color: #2f5bd3;
+}
+
+.header-actions {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+/* ================= ROUND THEME BUTTON ================= */
+
+.mode-toggle {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+    transition: 0.4s ease;
+    background: black;
+    color: white;
+}
+
+.mode-toggle:hover {
+    transform: scale(1.1) rotate(10deg);
+}
+
+/* ================= BUTTONS ================= */
+
+.admin-btn,
+.action-btn,
+.logout-btn {
+    padding: 8px 18px;
+    border-radius: 25px;
+    text-decoration: none;
+    font-weight: 500;
+    border: none;
+    cursor: pointer;
+    color: white;
+    transition: 0.3s ease;
+}
+
+/* Admin Button */
+.admin-btn {
+    background: linear-gradient(135deg, #2f5bd3, #4e8cff);
+    box-shadow: 0 6px 15px rgba(0,0,0,0.2);
+}
+
+.admin-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+}
+
+/* Logout Button */
+.logout-btn {
+    background: linear-gradient(135deg, #e53935, #ff6f61);
+}
+
+.logout-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+}
+
+/* Print Button */
+.print-btn {
+    display: inline-block;
+    padding: 8px 16px;
+    background: linear-gradient(135deg, #9c27b0, #ba68c8);
+    color: white !important;
+    border-radius: 20px;
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 500;
+    transition: 0.3s ease;
+}
+
+.print-btn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 6px 15px rgba(0,0,0,0.25);
+}
+
+/* ================= CARD ================= */
+
+.card {
+    width: 420px;
+    max-width: 95%;
+    background: white;
+    margin: 60px auto;
+    padding: 35px;
+    border-radius: 20px;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+    color: #2f5bd3;
+}
+
+/* ================= FORM ================= */
+
+input, select, textarea {
+    width: 100%;
+    padding: 12px;
+    margin: 12px 0;
+    border-radius: 10px;
+    border: 1px solid #ddd;
+    transition: 0.3s;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+    border-color: #2f5bd3;
+    box-shadow: 0 0 10px rgba(47,91,211,0.2);
+    outline: none;
+}
+
+button {
+    width: 100%;
+    padding: 12px;
+    background: linear-gradient(135deg, #2f5bd3, #4e8cff);
+    color: white;
+    border: none;
+    border-radius: 25px;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+button:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+}
+
+/* ================= DASHBOARD CARDS ================= */
+
+.dashboard-cards {
+    display: flex;
+    justify-content: center;
+    gap: 25px;
+    margin: 40px 20px;
+    flex-wrap: wrap;
+}
+
+.status-card {
+    width: 260px;
+    padding: 30px;
+    border-radius: 20px;
+    text-align: center;
+    box-shadow: 0 15px 30px rgba(0,0,0,0.15);
+    transition: 0.3s;
+    color: white;
+}
+
+.status-card:hover {
+    transform: translateY(-8px) scale(1.05);
+}
+
+.status-card:nth-child(1) { background: linear-gradient(135deg, #ff9800, #ffb74d); }
+.status-card:nth-child(2) { background: linear-gradient(135deg, #2196f3, #64b5f6); }
+.status-card:nth-child(3) { background: linear-gradient(135deg, #4caf50, #81c784); }
+
+.status-card h2 {
+    font-size: 40px;
+    margin-top: 10px;
+}
+
+/* ================= TABLE ================= */
+
+.table-wrapper {
+    width: 100%;
+    overflow-x: auto;
+}
+
+table {
+    width: 100%;
+    min-width: 900px;
+    border-collapse: collapse;
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+    color: #333;
+}
+
+th {
+    background: #2f5bd3;
+    color: white;
+    padding: 14px;
+}
+
+td {
+    padding: 12px;
+    text-align: center;
+    border-bottom: 1px solid #eee;
+}
+
+tr:hover {
+    background: #f0f5ff;
+}
+
+/* ================= BADGES ================= */
+
+.badge {
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 12px;
+    color: white;
+}
+
+.waiting { background: #ff9800; }
+.called { background: #2196f3; }
+.completed { background: #4caf50; }
+
+/* ================= POPUP ================= */
+
+.popup {
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.6);
+    top: 0;
+    left: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.popup-content {
+    background: white;
+    padding: 40px;
+    border-radius: 16px;
+    text-align: center;
+    width: 360px;
+    color: #2f5bd3;
+}
+
+/* ================= DARK MODE ================= */
+
+.dark-mode {
+    background: black !important;
+    color: white;
+}
+
+.dark-mode header {
+    background: rgba(0,0,0,0.8);
+}
+
+.dark-mode .logo {
+    color: white;
+}
+
+.dark-mode .card {
+    background: #111;
+    color: white;
+}
+
+.dark-mode table {
+    background: #111;
+    color: white;
+}
+
+.dark-mode th {
+    background: #222;
+}
+
+.dark-mode td {
+    border-bottom: 1px solid #333;
+}
+
+.dark-mode input,
+.dark-mode textarea,
+.dark-mode select {
+    background: #222;
+    color: white;
+    border: 1px solid #444;
+}
+
+.dark-mode .mode-toggle {
+    background: white;
+    color: black;
+}
+
+.dark-mode .print-btn {
+    background: linear-gradient(135deg, #ab47bc, #ce93d8);
+}
+
+/* ================= FOOTER ================= */
+
+footer {
+    text-align: center;
+    margin: 40px 0;
+    color: inherit;
+}
+
+/* ================= RESPONSIVE ================= */
+
+@media (max-width: 768px) {
+
+    header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+
+    .dashboard-cards {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .status-card {
+        width: 90%;
+    }
+
+    table {
+        font-size: 12px;
+    }
+}
+
+@media (max-width: 480px) {
+
+    .card {
+        padding: 20px;
+    }
+
+    input, select, textarea {
+        font-size: 14px;
+    }
+
+    button {
+        font-size: 14px;
+    }
+
+    .status-card h2 {
+        font-size: 28px;
+    }
+}
