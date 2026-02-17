@@ -22,7 +22,7 @@ def get_db_connection():
 # AUTO CREATE TABLE
 # ==========================================
 
-def :
+def init_db():
     conn = get_db_connection()
     cur = conn.cursor()
 
@@ -270,6 +270,7 @@ def logout():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8080))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
