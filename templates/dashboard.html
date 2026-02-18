@@ -6,11 +6,8 @@
 </head>
 <body>
 
-<!-- ================= HEADER ================= -->
-
 <header>
     <div class="logo">SmartQueue Hospital - Admin</div>
-
     <div class="header-actions">
         <button onclick="confirmLogout()" class="logout-btn">Logout</button>
     </div>
@@ -20,10 +17,7 @@
     Admin Dashboard
 </h2>
 
-<!-- ================= STATUS CARDS ================= -->
-
 <div class="dashboard-cards">
-
     <div class="status-card">
         <h3>Waiting</h3>
         <h2 id="waitingCount">{{ waiting }}</h2>
@@ -38,75 +32,64 @@
         <h3>Completed</h3>
         <h2 id="completedCount">{{ completed }}</h2>
     </div>
-
 </div>
-
-<!-- ================= PATIENT TABLE ================= -->
 
 <div class="table-wrapper">
 <table>
-    <tr>
-        <th>Token</th>
-        <th>Name</th>
-        <th>Age</th>
-        <th>Gender</th>
-        <th>Mobile</th>
-        <th>Check-In Time</th>
-        <th>Status</th>
-        <th>Action</th>
-        <th>Print</th>
-    </tr>
+<tr>
+    <th>Token</th>
+    <th>Name</th>
+    <th>Age</th>
+    <th>Gender</th>
+    <th>Mobile</th>
+    <th>Check-In Time</th>
+    <th>Status</th>
+    <th>Action</th>
+    <th>Print</th>
+</tr>
 
-    {% for p in patients %}
-    <tr id="row-{{ p.id }}">
-        <td>#{{ p.id }}</td>
-        <td>{{ p.name }}</td>
-        <td>{{ p.age }}</td>
-        <td>{{ p.gender }}</td>
-        <td>{{ p.mobile }}</td>
-        <td>{{ p.checkin_time }}</td>
+{% for p in patients %}
+<tr>
+    <td>#{{ p.id }}</td>
+    <td>{{ p.name }}</td>
+    <td>{{ p.age }}</td>
+    <td>{{ p.gender }}</td>
+    <td>{{ p.mobile }}</td>
+    <td>{{ p.checkin_time }}</td>
 
-        <!-- STATUS -->
-        <td>
-            <span class="badge 
-                {% if p.status == 'Waiting' %}waiting
-                {% elif p.status == 'Called' %}called
-                {% else %}completed
-                {% endif %}"
-                id="status-{{ p.id }}">
-                {{ p.status }}
-            </span>
-        </td>
+    <td>
+        <span class="badge 
+            {% if p.status == 'Waiting' %}waiting
+            {% elif p.status == 'Called' %}called
+            {% else %}completed
+            {% endif %}">
+            {{ p.status }}
+        </span>
+    </td>
 
-        <!-- ACTION -->
-        <td id="action-{{ p.id }}">
-            {% if p.status == "Waiting" %}
-                <button onclick="callPatient({{ p.id }}, '{{ p.mobile }}')" 
-                        class="action-btn call-btn">Call</button>
+    <td>
+        {% if p.status == "Waiting" %}
+            <button onclick="callPatient({{ p.id }}, '{{ p.mobile }}')" 
+                    class="action-btn call-btn">Call</button>
+        {% elif p.status == "Called" %}
+            <button onclick="completePatient({{ p.id }})" 
+                    class="action-btn complete-btn">Complete</button>
+        {% else %}
+            -
+        {% endif %}
+    </td>
 
-            {% elif p.status == "Called" %}
-                <button onclick="completePatient({{ p.id }})" 
-                        class="action-btn complete-btn">Complete</button>
-
-            {% else %}
-                -
-            {% endif %}
-        </td>
-
-        <!-- PRINT -->
-        <td id="print-{{ p.id }}">
-            {% if p.status != "Waiting" %}
-                <a href="/print/{{ p.id }}"
-                   target="_blank"
-                   class="print-btn">
-                   🖨 Print
-                </a>
-            {% else %}
-                -
-            {% endif %}
-        </td>
-    </tr>
-    {% endfor %}
+    <td>
+        {% if p.status != "Waiting" %}
+            <a href="/print/{{ p.id }}" target="_blank" class="print-btn">
+                🖨 Print
+            </a>
+        {% else %}
+            -
+        {% endif %}
+    </td>
+</tr>
+{% endfor %}
 </table>
 </div>
 
@@ -114,67 +97,35 @@
     © 2026 SmartQueue Hospital
 </footer>
 
-<!-- ================= JAVASCRIPT ================= -->
-
 <script>
 
 /* ===== Logout ===== */
-
 function confirmLogout() {
     if (confirm("Are you sure you want to logout?")) {
         window.location.href = "/logout";
     }
 }
 
-/* ===== Update Counters ===== */
-
-function updateCounters(oldStatus, newStatus) {
-
-    let waiting = document.getElementById("waitingCount");
-    let called = document.getElementById("calledCount");
-    let completed = document.getElementById("completedCount");
-
-    if (oldStatus === "Waiting") waiting.innerText--;
-    if (oldStatus === "Called") called.innerText--;
-
-    if (newStatus === "Called") called.innerText++;
-    if (newStatus === "Completed") completed.innerText++;
-}
-
-/* ===== WhatsApp Direct Open ===== */
-
+/* ===== WhatsApp Open ===== */
 function sendWhatsApp(mobile, token) {
 
-    let formattedMobile = mobile.replace(/\D/g, '');
+    let number = mobile.replace(/\D/g, '');
 
-    if (!formattedMobile.startsWith("91")) {
-        formattedMobile = "91" + formattedMobile;
+    if (!number.startsWith("91")) {
+        number = "91" + number;
     }
 
     let message = "Token number " + token +
                   " is now called. Please proceed to consultation room.";
 
-    let isMobile = /iPhone|Android/i.test(navigator.userAgent);
-
-    let url;
-
-    if (isMobile) {
-        url = "whatsapp://send?phone=" + formattedMobile +
-              "&text=" + encodeURIComponent(message);
-    } else {
-        url = "https://web.whatsapp.com/send?phone=" + formattedMobile +
-              "&text=" + encodeURIComponent(message);
-    }
+    let url = "https://wa.me/" + number +
+              "?text=" + encodeURIComponent(message);
 
     window.open(url, "_blank");
 }
 
 /* ===== Call Patient ===== */
-
 function callPatient(id, mobile) {
-
-    let statusElement = document.getElementById("status-" + id);
-    let oldStatus = statusElement.innerText;
 
     fetch(`/call/${id}`, { method: "POST" })
     .then(response => response.json())
@@ -182,49 +133,30 @@ function callPatient(id, mobile) {
 
         if (data.success) {
 
-            statusElement.innerText = "Called";
-            statusElement.className = "badge called";
-
-            document.getElementById("action-" + id).innerHTML =
-                `<button onclick="completePatient(${id})" 
-                 class="action-btn complete-btn">Complete</button>`;
-
-            document.getElementById("print-" + id).innerHTML =
-                `<a href="/print/${id}" target="_blank" 
-                 class="print-btn">🖨 Print</a>`;
-
-            updateCounters(oldStatus, "Called");
-
             sendWhatsApp(mobile, id);
+
+            // reload after 1 second
+            setTimeout(function(){
+                location.reload();
+            }, 1000);
         }
     });
 }
 
 /* ===== Complete Patient ===== */
-
 function completePatient(id) {
-
-    let statusElement = document.getElementById("status-" + id);
-    let oldStatus = statusElement.innerText;
 
     fetch(`/complete/${id}`, { method: "POST" })
     .then(response => response.json())
     .then(data => {
 
         if (data.success) {
-
-            statusElement.innerText = "Completed";
-            statusElement.className = "badge completed";
-
-            document.getElementById("action-" + id).innerHTML = "-";
-
-            updateCounters(oldStatus, "Completed");
+            location.reload();
         }
     });
 }
 
 /* ===== Auto Refresh Every 6 Seconds ===== */
-
 setInterval(function(){
     location.reload();
 }, 6000);
