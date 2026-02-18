@@ -6,26 +6,23 @@ from datetime import datetime
 app = Flask(__name__)
 app.secret_key = "super_secure_key_2026"
 
-# ==========================================
-# DATABASE CONNECTION (Render PostgreSQL)
-# ==========================================
+# ==============================
+# DATABASE CONNECTION (PostgreSQL)
+# ==============================
 
 DATABASE_URL = os.environ.get("DATABASE_URL")
 
 def get_db_connection():
-    return psycopg2.connect(
-        DATABASE_URL,
-        sslmode="require"   # REQUIRED for Render
-    )
+    conn = psycopg2.connect(DATABASE_URL)
+    return conn
 
-# ==========================================
-# AUTO CREATE TABLE
-# ==========================================
+# ==============================
+# CREATE TABLE IF NOT EXISTS
+# ==============================
 
 def init_db():
     conn = get_db_connection()
     cur = conn.cursor()
-
     cur.execute("""
         CREATE TABLE IF NOT EXISTS patients (
             id SERIAL PRIMARY KEY,
@@ -38,35 +35,23 @@ def init_db():
             checkin_time TEXT
         );
     """)
-
     conn.commit()
     cur.close()
     conn.close()
 
 init_db()
 
-# ==========================================
-# DISABLE BACK BUTTON CACHE
-# ==========================================
-
-@app.after_request
-def add_header(response):
-    response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
-    response.headers["Pragma"] = "no-cache"
-    response.headers["Expires"] = "0"
-    return response
-
-# ==========================================
+# ==============================
 # HOME
-# ==========================================
+# ==============================
 
 @app.route("/")
 def home():
     return render_template("index.html")
 
-# ==========================================
-# PATIENT CHECKIN
-# ==========================================
+# ==============================
+# CHECKIN
+# ==============================
 
 @app.route("/checkin", methods=["POST"])
 def checkin():
@@ -99,9 +84,9 @@ def checkin():
         "token": token_id
     })
 
-# ==========================================
+# ==============================
 # ADMIN LOGIN
-# ==========================================
+# ==============================
 
 @app.route("/admin", methods=["GET", "POST"])
 def admin():
@@ -121,9 +106,9 @@ def admin():
 
     return render_template("admin_login.html")
 
-# ==========================================
+# ==============================
 # DASHBOARD
-# ==========================================
+# ==============================
 
 @app.route("/dashboard")
 def dashboard():
@@ -134,10 +119,7 @@ def dashboard():
     conn = get_db_connection()
     cur = conn.cursor()
 
-    cur.execute("""
-        SELECT id, name, age, gender, address, mobile, status, checkin_time 
-        FROM patients ORDER BY id ASC
-    """)
+    cur.execute("SELECT * FROM patients ORDER BY id ASC")
     rows = cur.fetchall()
 
     patients = []
@@ -168,9 +150,9 @@ def dashboard():
         completed=completed
     )
 
-# ==========================================
-# CALL PATIENT
-# ==========================================
+# ==============================
+# CALL
+# ==============================
 
 @app.route("/call/<int:id>", methods=["POST"])
 def call_patient(id):
@@ -185,22 +167,19 @@ def call_patient(id):
     conn.commit()
 
     cur.execute("SELECT mobile FROM patients WHERE id=%s", (id,))
-    result = cur.fetchone()
+    mobile = cur.fetchone()[0]
 
     cur.close()
     conn.close()
 
-    if not result:
-        return jsonify({"success": False})
-
     return jsonify({
         "success": True,
-        "mobile": result[0]
+        "mobile": mobile
     })
 
-# ==========================================
-# COMPLETE PATIENT
-# ==========================================
+# ==============================
+# COMPLETE
+# ==============================
 
 @app.route("/complete/<int:id>", methods=["POST"])
 def complete_patient(id):
@@ -219,9 +198,9 @@ def complete_patient(id):
 
     return jsonify({"success": True})
 
-# ==========================================
-# PRINT RECEIPT
-# ==========================================
+# ==============================
+# PRINT
+# ==============================
 
 @app.route("/print/<int:id>")
 def print_receipt(id):
@@ -254,19 +233,8 @@ def print_receipt(id):
 
     return render_template("print_receipt.html", patient=patient)
 
-# ==========================================
-# LOGOUT
-# ==========================================
-
-@app.route("/logout")
-def logout():
-    session.clear()
-    return redirect(url_for("admin"))
-
-# ==========================================
-# RUN
-# ==========================================
+# ==============================
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))
-    app.run(host="0.0.0.0", port=port)
+    app.run(host="0.0.0.0", port=port) 
