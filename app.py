@@ -8,7 +8,7 @@ app = Flask(__name__)
 app.secret_key = "super_secure_key_2026"
 
 # ==============================
-# DATABASE CONFIG (Render/Railway)
+# DATABASE CONFIG (Railway)
 # ==============================
 
 DATABASE_URL = os.environ.get("DATABASE_URL")
@@ -16,6 +16,7 @@ DATABASE_URL = os.environ.get("DATABASE_URL")
 def get_db_connection():
     conn = psycopg2.connect(DATABASE_URL, sslmode="require")
     return conn
+
 
 # ==============================
 # CREATE TABLE IF NOT EXISTS
@@ -42,6 +43,7 @@ def init_db():
 
 init_db()
 
+
 # ==============================
 # DISABLE BACK CACHE
 # ==============================
@@ -51,6 +53,7 @@ def add_header(response):
     response.headers["Cache-Control"] = "no-store"
     return response
 
+
 # ==============================
 # HOME
 # ==============================
@@ -58,6 +61,7 @@ def add_header(response):
 @app.route("/")
 def home():
     return render_template("index.html")
+
 
 # ==============================
 # CHECKIN (PATIENT)
@@ -94,6 +98,7 @@ def checkin():
         "token": token_id
     })
 
+
 # ==============================
 # ADMIN LOGIN
 # ==============================
@@ -115,6 +120,7 @@ def admin():
             flash("Invalid Email or Password")
 
     return render_template("admin_login.html")
+
 
 # ==============================
 # DASHBOARD
@@ -147,6 +153,7 @@ def dashboard():
         completed=completed
     )
 
+
 # ==============================
 # CALL PATIENT
 # ==============================
@@ -177,6 +184,7 @@ def call_patient(id):
         "mobile": result[0]
     })
 
+
 # ==============================
 # COMPLETE PATIENT
 # ==============================
@@ -198,26 +206,6 @@ def complete_patient(id):
 
     return jsonify({"success": True})
 
-# ==============================
-# DELETE ALL PATIENT DATA
-# ==============================
-
-@app.route("/delete-data", methods=["POST"])
-def delete_data():
-
-    if not session.get("admin_logged_in"):
-        return redirect(url_for("admin"))
-
-    conn = get_db_connection()
-    cur = conn.cursor()
-
-    cur.execute("DELETE FROM patients")
-    conn.commit()
-
-    cur.close()
-    conn.close()
-
-    return redirect(url_for("dashboard"))
 
 # ==============================
 # PRINT RECEIPT
@@ -243,6 +231,7 @@ def print_receipt(id):
 
     return render_template("print_receipt.html", patient=patient)
 
+
 # ==============================
 # LOGOUT
 # ==============================
@@ -251,6 +240,7 @@ def print_receipt(id):
 def logout():
     session.clear()
     return redirect(url_for("admin"))
+
 
 # ==============================
 # RUN (LOCAL ONLY)
