@@ -8,7 +8,7 @@ app = Flask(__name__)
 app.secret_key = "super_secure_key_2026"
 
 # ==============================
-# DATABASE CONFIG
+# DATABASE CONFIG (Railway)
 # ==============================
 
 DATABASE_URL = os.environ.get("DATABASE_URL")
@@ -155,28 +155,6 @@ def dashboard():
 
 
 # ==============================
-# LIVE DATA (ADDED - NO CHANGE TO OTHER LOGIC)
-# ==============================
-
-@app.route("/live-data")
-def live_data():
-
-    if not session.get("admin_logged_in"):
-        return jsonify({"logout": True})
-
-    conn = get_db_connection()
-    cur = conn.cursor(cursor_factory=RealDictCursor)
-
-    cur.execute("SELECT * FROM patients ORDER BY id ASC")
-    patients = cur.fetchall()
-
-    cur.close()
-    conn.close()
-
-    return jsonify(patients)
-
-
-# ==============================
 # CALL PATIENT
 # ==============================
 
@@ -270,3 +248,4 @@ def logout():
 
 if __name__ == "__main__":
     app.run(debug=True)
+ 
