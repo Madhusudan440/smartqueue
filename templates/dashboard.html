@@ -12,16 +12,7 @@
     <div class="logo">SmartQueue Hospital - Admin</div>
 
     <div class="header-actions">
-
-        <!-- DOWNLOAD REPORT -->
-        <a href="/download-report" class="admin-btn">
-            📥 Download Report
-        </a>
-
-        <!-- LOGOUT -->
-        <button onclick="confirmLogout()" class="logout-btn">
-            Logout
-        </button>
+        <button onclick="confirmLogout()" class="logout-btn">Logout</button>
     </div>
 </header>
 
@@ -74,6 +65,7 @@
         <td>{{ p.mobile }}</td>
         <td>{{ p.checkin_time }}</td>
 
+
         <!-- STATUS -->
         <td>
             <span class="badge 
@@ -103,16 +95,17 @@
 
         <!-- PRINT -->
         <td id="print-{{ p.id }}">
-            {% if p.status != "Waiting" %}
-                <a href="/print/{{ p.id }}"
-                   target="_blank"
-                   class="print-btn">
-                   🖨 Print
-                </a>
-            {% else %}
-                -
-            {% endif %}
-        </td>
+    {% if p.status != "Waiting" %}
+        <a href="/print/{{ p.id }}"
+           target="_blank"
+           class="print-btn">
+           🖨 Print
+        </a>
+    {% else %}
+        -
+    {% endif %}
+</td>
+
     </tr>
     {% endfor %}
 </table>
@@ -166,9 +159,11 @@ function sendWhatsApp(mobile, token) {
     let url;
 
     if (isMobile) {
+        // Direct WhatsApp App
         url = "whatsapp://send?phone=" + formattedMobile +
               "&text=" + encodeURIComponent(message);
     } else {
+        // WhatsApp Web (same tab)
         url = "https://web.whatsapp.com/send?phone=" + formattedMobile +
               "&text=" + encodeURIComponent(message);
     }
@@ -198,10 +193,11 @@ function callPatient(id, mobile) {
 
             document.getElementById("print-" + id).innerHTML =
                 `<a href="/print/${id}" target="_blank" 
-                 class="print-btn">🖨 Print</a>`;
+                 class="action-btn call-btn">Print</a>`;
 
             updateCounters(oldStatus, "Called");
 
+            // ✅ DIRECT WHATSAPP OPEN
             sendWhatsApp(mobile, id);
         }
     });
@@ -229,12 +225,6 @@ function completePatient(id) {
         }
     });
 }
-
-/* ===== AUTO REFRESH EVERY 5 SECONDS ===== */
-
-setInterval(function(){
-    location.reload();
-}, 5000);
 
 </script>
 
