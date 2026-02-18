@@ -43,6 +43,7 @@
 
 <!-- ================= PATIENT TABLE ================= -->
 
+<div class="table-wrapper">
 <table>
     <tr>
         <th>Token</th>
@@ -64,7 +65,6 @@
         <td>{{ p.gender }}</td>
         <td>{{ p.mobile }}</td>
         <td>{{ p.checkin_time }}</td>
-
 
         <!-- STATUS -->
         <td>
@@ -95,20 +95,20 @@
 
         <!-- PRINT -->
         <td id="print-{{ p.id }}">
-    {% if p.status != "Waiting" %}
-        <a href="/print/{{ p.id }}"
-           target="_blank"
-           class="print-btn">
-           🖨 Print
-        </a>
-    {% else %}
-        -
-    {% endif %}
-</td>
-
+            {% if p.status != "Waiting" %}
+                <a href="/print/{{ p.id }}"
+                   target="_blank"
+                   class="print-btn">
+                   🖨 Print
+                </a>
+            {% else %}
+                -
+            {% endif %}
+        </td>
     </tr>
     {% endfor %}
 </table>
+</div>
 
 <footer>
     © 2026 SmartQueue Hospital
@@ -118,7 +118,7 @@
 
 <script>
 
-/* ===== Logout Confirmation ===== */
+/* ===== Logout ===== */
 
 function confirmLogout() {
     if (confirm("Are you sure you want to logout?")) {
@@ -141,7 +141,7 @@ function updateCounters(oldStatus, newStatus) {
     if (newStatus === "Completed") completed.innerText++;
 }
 
-/* ===== DIRECT WHATSAPP OPEN ===== */
+/* ===== WhatsApp Direct Open ===== */
 
 function sendWhatsApp(mobile, token) {
 
@@ -159,16 +159,14 @@ function sendWhatsApp(mobile, token) {
     let url;
 
     if (isMobile) {
-        // Direct WhatsApp App
         url = "whatsapp://send?phone=" + formattedMobile +
               "&text=" + encodeURIComponent(message);
     } else {
-        // WhatsApp Web (same tab)
         url = "https://web.whatsapp.com/send?phone=" + formattedMobile +
               "&text=" + encodeURIComponent(message);
     }
 
-    window.location.href = url;
+    window.open(url, "_blank");
 }
 
 /* ===== Call Patient ===== */
@@ -193,11 +191,10 @@ function callPatient(id, mobile) {
 
             document.getElementById("print-" + id).innerHTML =
                 `<a href="/print/${id}" target="_blank" 
-                 class="action-btn call-btn">Print</a>`;
+                 class="print-btn">🖨 Print</a>`;
 
             updateCounters(oldStatus, "Called");
 
-            // ✅ DIRECT WHATSAPP OPEN
             sendWhatsApp(mobile, id);
         }
     });
@@ -225,15 +222,14 @@ function completePatient(id) {
         }
     });
 }
-    <script>
+
+/* ===== Auto Refresh Every 6 Seconds ===== */
+
 setInterval(function(){
     location.reload();
 }, 6000);
-</script>
-
 
 </script>
 
 </body>
-</html> 
-
+</html>
