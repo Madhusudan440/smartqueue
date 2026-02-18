@@ -170,7 +170,7 @@ def dashboard():
     )
 
 # =====================================================
-# CALL PATIENT (WhatsApp Support)
+# CALL PATIENT (Stable WhatsApp)
 # =====================================================
 
 @app.route("/call/<int:id>", methods=["POST"])
@@ -182,22 +182,27 @@ def call_patient(id):
     conn = get_db_connection()
     cur = conn.cursor()
 
-    # Update status
-    cur.execute("UPDATE patients SET status='Called' WHERE id=%s", (id,))
-    conn.commit()
-
-    # Get patient info
-    cur.execute("SELECT name, mobile FROM patients WHERE id=%s", (id,))
+    # Update and ensure patient exists
+    cur.execute("UPDATE patients SET status='Called' WHERE id=%s RETURNING name, mobile", (id,))
     result = cur.fetchone()
 
+    if not result:
+        cur.close()
+        conn.close()
+        return jsonify({"success": False})
+
+    conn.commit()
     cur.close()
     conn.close()
 
-    if not result:
-        return jsonify({"success": False})
-
     name = result[0]
     mobile = result[1]
+
+    # Clean mobile number (remove spaces, symbols)
+    mobile = ''.join(filter(str.isdigit, mobile))
+
+    if not mobile.startswith("91"):
+        mobile = "91" + mobile
 
     message = f"Hello {name}, your token is now being called. Please proceed to the consultation room."
     encoded_message = urllib.parse.quote(message)
