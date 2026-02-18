@@ -1,22 +1,28 @@
-from flask import Flask, render_template, request, redirect, session, url_for, flash, jsonify
+from flask import Flask, render_template, request, redirect, session, url_for, flash, jsonify, Response
 import os
 import psycopg2
 from psycopg2.extras import RealDictCursor
 from datetime import datetime
+import csv
 
 app = Flask(__name__)
 app.secret_key = "super_secure_key_2026"
 
 # ==============================
-# DATABASE CONFIG (Railway)
+# DATABASE CONFIG
 # ==============================
 
 DATABASE_URL = os.environ.get("DATABASE_URL")
 
-def get_db_connection():
-    conn = psycopg2.connect(DATABASE_URL, sslmode="require")
-    return conn
+if not DATABASE_URL:
+    raise ValueError("DATABASE_URL is not set")
 
+def get_db_connection():
+    return psycopg2.connect(
+        DATABASE_URL,
+        sslmode="require",
+        cursor_factory=RealDictCursor
+    )
 
 # ==============================
 # CREATE TABLE IF NOT EXISTS
@@ -43,7 +49,6 @@ def init_db():
 
 init_db()
 
-
 # ==============================
 # DISABLE BACK CACHE
 # ==============================
@@ -53,7 +58,6 @@ def add_header(response):
     response.headers["Cache-Control"] = "no-store"
     return response
 
-
 # ==============================
 # HOME
 # ==============================
@@ -62,9 +66,8 @@ def add_header(response):
 def home():
     return render_template("index.html")
 
-
 # ==============================
-# CHECKIN (PATIENT)
+# CHECKIN
 # ==============================
 
 @app.route("/checkin", methods=["POST"])
@@ -87,7 +90,7 @@ def checkin():
         RETURNING id;
     """, (name, age, gender, address, mobile, checkin_time))
 
-    token_id = cur.fetchone()[0]
+    token_id = cur.fetchone()["id"]
 
     conn.commit()
     cur.close()
@@ -97,7 +100,6 @@ def checkin():
         "success": True,
         "token": token_id
     })
-
 
 # ==============================
 # ADMIN LOGIN
@@ -121,7 +123,6 @@ def admin():
 
     return render_template("admin_login.html")
 
-
 # ==============================
 # DASHBOARD
 # ==============================
@@ -133,7 +134,7 @@ def dashboard():
         return redirect(url_for("admin"))
 
     conn = get_db_connection()
-    cur = conn.cursor(cursor_factory=RealDictCursor)
+    cur = conn.cursor()
 
     cur.execute("SELECT * FROM patients ORDER BY id ASC")
     patients = cur.fetchall()
@@ -152,7 +153,6 @@ def dashboard():
         called=called,
         completed=completed
     )
-
 
 # ==============================
 # CALL PATIENT
@@ -181,9 +181,8 @@ def call_patient(id):
 
     return jsonify({
         "success": True,
-        "mobile": result[0]
+        "mobile": result["mobile"]
     })
-
 
 # ==============================
 # COMPLETE PATIENT
@@ -206,6 +205,35 @@ def complete_patient(id):
 
     return jsonify({"success": True})
 
+# ==============================
+# DOWNLOAD DAILY REPORT (CSV)
+# ==============================
+
+@app.route("/download-report")
+def download_report():
+
+    if not session.get("admin_logged_in"):
+        return redirect(url_for("admin"))
+
+    conn = get_db_connection()
+    cur = conn.cursor()
+
+    cur.execute("SELECT * FROM patients ORDER BY id ASC")
+    patients = cur.fetchall()
+
+    cur.close()
+    conn.close()
+
+    def generate():
+        yield "ID,Name,Age,Gender,Address,Mobile,Status,Checkin Time\n"
+        for p in patients:
+            yield f"{p['id']},{p['name']},{p['age']},{p['gender']},{p['address']},{p['mobile']},{p['status']},{p['checkin_time']}\n"
+
+    return Response(
+        generate(),
+        mimetype="text/csv",
+        headers={"Content-Disposition": "attachment;filename=daily_report.csv"}
+    )
 
 # ==============================
 # PRINT RECEIPT
@@ -218,7 +246,7 @@ def print_receipt(id):
         return redirect(url_for("admin"))
 
     conn = get_db_connection()
-    cur = conn.cursor(cursor_factory=RealDictCursor)
+    cur = conn.cursor()
 
     cur.execute("SELECT * FROM patients WHERE id=%s", (id,))
     patient = cur.fetchone()
@@ -231,7 +259,6 @@ def print_receipt(id):
 
     return render_template("print_receipt.html", patient=patient)
 
-
 # ==============================
 # LOGOUT
 # ==============================
@@ -241,9 +268,8 @@ def logout():
     session.clear()
     return redirect(url_for("admin"))
 
-
 # ==============================
-# RUN (LOCAL ONLY)
+# RUN LOCAL ONLY
 # ==============================
 
 if __name__ == "__main__":
