@@ -12,7 +12,21 @@
     <div class="logo">SmartQueue Hospital - Admin</div>
 
     <div class="header-actions">
-        <button onclick="confirmLogout()" class="logout-btn">Logout</button>
+
+        <!-- DELETE DATA BUTTON -->
+        <form action="/delete-data" method="POST" style="display:inline;">
+            <button type="submit"
+                    class="logout-btn"
+                    onclick="return confirm('Are you sure you want to delete all patient data?');">
+                🗑 Delete Data
+            </button>
+        </form>
+
+        <!-- LOGOUT -->
+        <button onclick="confirmLogout()" class="logout-btn">
+            Logout
+        </button>
+
     </div>
 </header>
 
@@ -65,7 +79,6 @@
         <td>{{ p.mobile }}</td>
         <td>{{ p.checkin_time }}</td>
 
-
         <!-- STATUS -->
         <td>
             <span class="badge 
@@ -95,16 +108,16 @@
 
         <!-- PRINT -->
         <td id="print-{{ p.id }}">
-    {% if p.status != "Waiting" %}
-        <a href="/print/{{ p.id }}"
-           target="_blank"
-           class="print-btn">
-           🖨 Print
-        </a>
-    {% else %}
-        -
-    {% endif %}
-</td>
+            {% if p.status != "Waiting" %}
+                <a href="/print/{{ p.id }}"
+                   target="_blank"
+                   class="print-btn">
+                   🖨 Print
+                </a>
+            {% else %}
+                -
+            {% endif %}
+        </td>
 
     </tr>
     {% endfor %}
@@ -159,11 +172,9 @@ function sendWhatsApp(mobile, token) {
     let url;
 
     if (isMobile) {
-        // Direct WhatsApp App
         url = "whatsapp://send?phone=" + formattedMobile +
               "&text=" + encodeURIComponent(message);
     } else {
-        // WhatsApp Web (same tab)
         url = "https://web.whatsapp.com/send?phone=" + formattedMobile +
               "&text=" + encodeURIComponent(message);
     }
@@ -193,11 +204,10 @@ function callPatient(id, mobile) {
 
             document.getElementById("print-" + id).innerHTML =
                 `<a href="/print/${id}" target="_blank" 
-                 class="action-btn call-btn">Print</a>`;
+                 class="print-btn">🖨 Print</a>`;
 
             updateCounters(oldStatus, "Called");
 
-            // ✅ DIRECT WHATSAPP OPEN
             sendWhatsApp(mobile, id);
         }
     });
@@ -225,6 +235,12 @@ function completePatient(id) {
         }
     });
 }
+
+/* ===== AUTO REFRESH EVERY 2 SECONDS ===== */
+
+setInterval(function(){
+    location.reload();
+}, 2000);
 
 </script>
 
