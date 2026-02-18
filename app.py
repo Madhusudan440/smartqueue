@@ -14,7 +14,8 @@ app.secret_key = "super_secure_key_2026"
 DATABASE_URL = os.environ.get("DATABASE_URL")
 
 def get_db_connection():
-    return psycopg2.connect(DATABASE_URL, sslmode="require")
+    conn = psycopg2.connect(DATABASE_URL, sslmode="require")
+    return conn
 
 # ==============================
 # CREATE TABLE IF NOT EXISTS
@@ -124,8 +125,10 @@ def dashboard():
 
     conn = get_db_connection()
     cur = conn.cursor(cursor_factory=RealDictCursor)
+
     cur.execute("SELECT * FROM patients ORDER BY id ASC")
     patients = cur.fetchall()
+
     cur.close()
     conn.close()
 
@@ -133,14 +136,16 @@ def dashboard():
     called = sum(1 for p in patients if p["status"] == "Called")
     completed = sum(1 for p in patients if p["status"] == "Completed")
 
-    return render_template("dashboard.html",
-                           patients=patients,
-                           waiting=waiting,
-                           called=called,
-                           completed=completed)
+    return render_template(
+        "dashboard.html",
+        patients=patients,
+        waiting=waiting,
+        called=called,
+        completed=completed
+    )
 
 # ==============================
-# LIVE DATA (SAFE VERSION)
+# LIVE DATA (ONLY ADDITION)
 # ==============================
 
 @app.route("/live-data")
@@ -218,8 +223,10 @@ def print_receipt(id):
 
     conn = get_db_connection()
     cur = conn.cursor(cursor_factory=RealDictCursor)
+
     cur.execute("SELECT * FROM patients WHERE id=%s", (id,))
     patient = cur.fetchone()
+
     cur.close()
     conn.close()
 
