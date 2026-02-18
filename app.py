@@ -290,10 +290,12 @@ def print_receipt(id):
 # LOGOUT
 # ==========================================
 
-@app.route("/logout")
-def logout():
-    session.pop("admin_logged_in", None)
-    return redirect(url_for("admin"))
+@app.route("/dashboard")
+def dashboard():
+
+    if not session.get("admin_logged_in"):
+        return redirect(url_for("admin"))
+
 
 # ==========================================
 # RUN
@@ -302,3 +304,4 @@ def logout():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port)
+
