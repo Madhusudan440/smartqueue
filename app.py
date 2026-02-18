@@ -8,15 +8,13 @@ app = Flask(__name__)
 app.secret_key = "super_secure_key_2026"
 
 # ==============================
-# DATABASE CONFIG (Railway)
+# DATABASE CONFIG
 # ==============================
 
 DATABASE_URL = os.environ.get("DATABASE_URL")
 
 def get_db_connection():
-    conn = psycopg2.connect(DATABASE_URL, sslmode="require")
-    return conn
-
+    return psycopg2.connect(DATABASE_URL, sslmode="require")
 
 # ==============================
 # CREATE TABLE IF NOT EXISTS
@@ -43,7 +41,6 @@ def init_db():
 
 init_db()
 
-
 # ==============================
 # DISABLE BACK CACHE
 # ==============================
@@ -53,7 +50,6 @@ def add_header(response):
     response.headers["Cache-Control"] = "no-store"
     return response
 
-
 # ==============================
 # HOME
 # ==============================
@@ -62,9 +58,8 @@ def add_header(response):
 def home():
     return render_template("index.html")
 
-
 # ==============================
-# CHECKIN (PATIENT)
+# CHECKIN
 # ==============================
 
 @app.route("/checkin", methods=["POST"])
@@ -93,11 +88,7 @@ def checkin():
     cur.close()
     conn.close()
 
-    return jsonify({
-        "success": True,
-        "token": token_id
-    })
-
+    return jsonify({"success": True, "token": token_id})
 
 # ==============================
 # ADMIN LOGIN
@@ -121,7 +112,6 @@ def admin():
 
     return render_template("admin_login.html")
 
-
 # ==============================
 # DASHBOARD
 # ==============================
@@ -134,10 +124,8 @@ def dashboard():
 
     conn = get_db_connection()
     cur = conn.cursor(cursor_factory=RealDictCursor)
-
     cur.execute("SELECT * FROM patients ORDER BY id ASC")
     patients = cur.fetchall()
-
     cur.close()
     conn.close()
 
@@ -145,14 +133,30 @@ def dashboard():
     called = sum(1 for p in patients if p["status"] == "Called")
     completed = sum(1 for p in patients if p["status"] == "Completed")
 
-    return render_template(
-        "dashboard.html",
-        patients=patients,
-        waiting=waiting,
-        called=called,
-        completed=completed
-    )
+    return render_template("dashboard.html",
+                           patients=patients,
+                           waiting=waiting,
+                           called=called,
+                           completed=completed)
 
+# ==============================
+# LIVE DATA (SAFE VERSION)
+# ==============================
+
+@app.route("/live-data")
+def live_data():
+
+    if not session.get("admin_logged_in"):
+        return jsonify({"logout": True})
+
+    conn = get_db_connection()
+    cur = conn.cursor(cursor_factory=RealDictCursor)
+    cur.execute("SELECT * FROM patients ORDER BY id ASC")
+    patients = cur.fetchall()
+    cur.close()
+    conn.close()
+
+    return jsonify(patients)
 
 # ==============================
 # CALL PATIENT
@@ -179,11 +183,7 @@ def call_patient(id):
     if not result:
         return jsonify({"success": False})
 
-    return jsonify({
-        "success": True,
-        "mobile": result[0]
-    })
-
+    return jsonify({"success": True, "mobile": result[0]})
 
 # ==============================
 # COMPLETE PATIENT
@@ -206,7 +206,6 @@ def complete_patient(id):
 
     return jsonify({"success": True})
 
-
 # ==============================
 # PRINT RECEIPT
 # ==============================
@@ -219,10 +218,8 @@ def print_receipt(id):
 
     conn = get_db_connection()
     cur = conn.cursor(cursor_factory=RealDictCursor)
-
     cur.execute("SELECT * FROM patients WHERE id=%s", (id,))
     patient = cur.fetchone()
-
     cur.close()
     conn.close()
 
@@ -230,7 +227,6 @@ def print_receipt(id):
         return "Patient Not Found", 404
 
     return render_template("print_receipt.html", patient=patient)
-
 
 # ==============================
 # LOGOUT
@@ -240,11 +236,6 @@ def print_receipt(id):
 def logout():
     session.clear()
     return redirect(url_for("admin"))
-
-
-# ==============================
-# RUN (LOCAL ONLY)
-# ==============================
 
 if __name__ == "__main__":
     app.run(debug=True)
