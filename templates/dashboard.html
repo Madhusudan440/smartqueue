@@ -44,23 +44,20 @@
 <!-- ================= PATIENT TABLE ================= -->
 
 <table>
-    <thead>
-        <tr>
-            <th>Token</th>
-            <th>Name</th>
-            <th>Age</th>
-            <th>Gender</th>
-            <th>Mobile</th>
-            <th>Check-In Time</th>
-            <th>Status</th>
-            <th>Action</th>
-            <th>Print</th>
-        </tr>
-    </thead>
-
-    <tbody id="patientTableBody">
-    {% for p in patients %}
     <tr>
+        <th>Token</th>
+        <th>Name</th>
+        <th>Age</th>
+        <th>Gender</th>
+        <th>Mobile</th>
+        <th>Check-In Time</th>
+        <th>Status</th>
+        <th>Action</th>
+        <th>Print</th>
+    </tr>
+
+    {% for p in patients %}
+    <tr id="row-{{ p.id }}">
         <td>#{{ p.id }}</td>
         <td>{{ p.name }}</td>
         <td>{{ p.age }}</td>
@@ -68,17 +65,21 @@
         <td>{{ p.mobile }}</td>
         <td>{{ p.checkin_time }}</td>
 
+
+        <!-- STATUS -->
         <td>
             <span class="badge 
                 {% if p.status == 'Waiting' %}waiting
                 {% elif p.status == 'Called' %}called
                 {% else %}completed
-                {% endif %}">
+                {% endif %}"
+                id="status-{{ p.id }}">
                 {{ p.status }}
             </span>
         </td>
 
-        <td>
+        <!-- ACTION -->
+        <td id="action-{{ p.id }}">
             {% if p.status == "Waiting" %}
                 <button onclick="callPatient({{ p.id }}, '{{ p.mobile }}')" 
                         class="action-btn call-btn">Call</button>
@@ -92,20 +93,21 @@
             {% endif %}
         </td>
 
-        <td>
-            {% if p.status != "Waiting" %}
-                <a href="/print/{{ p.id }}"
-                   target="_blank"
-                   class="print-btn">
-                   🖨 Print
-                </a>
-            {% else %}
-                -
-            {% endif %}
-        </td>
+        <!-- PRINT -->
+        <td id="print-{{ p.id }}">
+    {% if p.status != "Waiting" %}
+        <a href="/print/{{ p.id }}"
+           target="_blank"
+           class="print-btn">
+           🖨 Print
+        </a>
+    {% else %}
+        -
+    {% endif %}
+</td>
+
     </tr>
     {% endfor %}
-    </tbody>
 </table>
 
 <footer>
@@ -157,9 +159,11 @@ function sendWhatsApp(mobile, token) {
     let url;
 
     if (isMobile) {
+        // Direct WhatsApp App
         url = "whatsapp://send?phone=" + formattedMobile +
               "&text=" + encodeURIComponent(message);
     } else {
+        // WhatsApp Web (same tab)
         url = "https://web.whatsapp.com/send?phone=" + formattedMobile +
               "&text=" + encodeURIComponent(message);
     }
@@ -171,10 +175,29 @@ function sendWhatsApp(mobile, token) {
 
 function callPatient(id, mobile) {
 
+    let statusElement = document.getElementById("status-" + id);
+    let oldStatus = statusElement.innerText;
+
     fetch(`/call/${id}`, { method: "POST" })
     .then(response => response.json())
     .then(data => {
+
         if (data.success) {
+
+            statusElement.innerText = "Called";
+            statusElement.className = "badge called";
+
+            document.getElementById("action-" + id).innerHTML =
+                `<button onclick="completePatient(${id})" 
+                 class="action-btn complete-btn">Complete</button>`;
+
+            document.getElementById("print-" + id).innerHTML =
+                `<a href="/print/${id}" target="_blank" 
+                 class="action-btn call-btn">Print</a>`;
+
+            updateCounters(oldStatus, "Called");
+
+            // ✅ DIRECT WHATSAPP OPEN
             sendWhatsApp(mobile, id);
         }
     });
@@ -184,81 +207,32 @@ function callPatient(id, mobile) {
 
 function completePatient(id) {
 
+    let statusElement = document.getElementById("status-" + id);
+    let oldStatus = statusElement.innerText;
+
     fetch(`/complete/${id}`, { method: "POST" })
     .then(response => response.json())
     .then(data => {
+
         if (data.success) {
-            console.log("Patient Completed");
+
+            statusElement.innerText = "Completed";
+            statusElement.className = "badge completed";
+
+            document.getElementById("action-" + id).innerHTML = "-";
+
+            updateCounters(oldStatus, "Completed");
         }
     });
 }
-
-/* ===== LIVE UPDATE WITHOUT RELOAD ===== */
-
+    <script>
 setInterval(function(){
+    location.reload();
+}, 7000);
+</script>
 
-    fetch("/live-data")
-    .then(response => response.json())
-    .then(data => {
-
-        if (data.logout) {
-            window.location.href = "/admin";
-            return;
-        }
-
-        let tableBody = "";
-        let waiting = 0;
-        let called = 0;
-        let completed = 0;
-
-        data.forEach(p => {
-
-            if (p.status === "Waiting") waiting++;
-            if (p.status === "Called") called++;
-            if (p.status === "Completed") completed++;
-
-            let actionButton = "-";
-
-            if (p.status === "Waiting") {
-                actionButton = `<button onclick="callPatient(${p.id}, '${p.mobile}')" 
-                                 class="action-btn call-btn">Call</button>`;
-            } else if (p.status === "Called") {
-                actionButton = `<button onclick="completePatient(${p.id})" 
-                                 class="action-btn complete-btn">Complete</button>`;
-            }
-
-            let printButton = "-";
-            if (p.status !== "Waiting") {
-                printButton = `<a href="/print/${p.id}" target="_blank"
-                                class="print-btn">🖨 Print</a>`;
-            }
-
-            tableBody += `
-                <tr>
-                    <td>#${p.id}</td>
-                    <td>${p.name}</td>
-                    <td>${p.age}</td>
-                    <td>${p.gender}</td>
-                    <td>${p.mobile}</td>
-                    <td>${p.checkin_time}</td>
-                    <td><span class="badge ${p.status.toLowerCase()}">${p.status}</span></td>
-                    <td>${actionButton}</td>
-                    <td>${printButton}</td>
-                </tr>
-            `;
-        });
-
-        document.getElementById("patientTableBody").innerHTML = tableBody;
-
-        document.getElementById("waitingCount").innerText = waiting;
-        document.getElementById("calledCount").innerText = called;
-        document.getElementById("completedCount").innerText = completed;
-
-    });
-
-}, 2000);
 
 </script>
 
 </body>
-</html>
+</html> 
