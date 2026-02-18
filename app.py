@@ -43,7 +43,6 @@ def init_db():
     cur.close()
     conn.close()
 
-init_db()
 
 # ==========================================
 # DISABLE BACK BUTTON CACHE
@@ -268,5 +267,13 @@ def logout():
 # ==========================================
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    port = int(os.environ.get("PORT", 8080))
+    app.run(host="0.0.0.0", port=port)
+
+
+
+
+
+
+
 
