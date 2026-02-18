@@ -3,8 +3,25 @@
 <head>
     <title>SmartQueue Hospital</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: url("{{ url_for('static', filename='hospit.jpg') }}") no-repeat center center fixed;
+            background-size: cover;
+        }
+
+        /* Dark overlay */
+        .overlay {
+            background: rgba(0, 0, 0, 0.65);
+            min-height: 100vh;
+        }
+    </style>
 </head>
 <body>
+
+<div class="overlay">
 
 <header>
     <div class="logo">SmartQueue Hospital</div>
@@ -53,6 +70,8 @@
         <button onclick="closePopup()">OK</button>
     </div>
 </div>
+
+</div> <!-- overlay end -->
 
 <script>
 
