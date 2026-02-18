@@ -1,20 +1,22 @@
 from flask import Flask, render_template, request, redirect, session, url_for, flash, jsonify
 import os
 import psycopg2
+from psycopg2.extras import RealDictCursor
 from datetime import datetime
 
 app = Flask(__name__)
 app.secret_key = "super_secure_key_2026"
 
 # ==============================
-# DATABASE CONNECTION (PostgreSQL)
+# DATABASE CONFIG (Railway)
 # ==============================
 
 DATABASE_URL = os.environ.get("DATABASE_URL")
 
 def get_db_connection():
-    conn = psycopg2.connect(DATABASE_URL)
+    conn = psycopg2.connect(DATABASE_URL, sslmode="require")
     return conn
+
 
 # ==============================
 # CREATE TABLE IF NOT EXISTS
@@ -41,6 +43,17 @@ def init_db():
 
 init_db()
 
+
+# ==============================
+# DISABLE BACK CACHE
+# ==============================
+
+@app.after_request
+def add_header(response):
+    response.headers["Cache-Control"] = "no-store"
+    return response
+
+
 # ==============================
 # HOME
 # ==============================
@@ -49,8 +62,9 @@ init_db()
 def home():
     return render_template("index.html")
 
+
 # ==============================
-# CHECKIN
+# CHECKIN (PATIENT)
 # ==============================
 
 @app.route("/checkin", methods=["POST"])
@@ -84,6 +98,7 @@ def checkin():
         "token": token_id
     })
 
+
 # ==============================
 # ADMIN LOGIN
 # ==============================
@@ -106,6 +121,7 @@ def admin():
 
     return render_template("admin_login.html")
 
+
 # ==============================
 # DASHBOARD
 # ==============================
@@ -117,23 +133,10 @@ def dashboard():
         return redirect(url_for("admin"))
 
     conn = get_db_connection()
-    cur = conn.cursor()
+    cur = conn.cursor(cursor_factory=RealDictCursor)
 
     cur.execute("SELECT * FROM patients ORDER BY id ASC")
-    rows = cur.fetchall()
-
-    patients = []
-    for row in rows:
-        patients.append({
-            "id": row[0],
-            "name": row[1],
-            "age": row[2],
-            "gender": row[3],
-            "address": row[4],
-            "mobile": row[5],
-            "status": row[6],
-            "checkin_time": row[7]
-        })
+    patients = cur.fetchall()
 
     cur.close()
     conn.close()
@@ -150,8 +153,9 @@ def dashboard():
         completed=completed
     )
 
+
 # ==============================
-# CALL
+# CALL PATIENT
 # ==============================
 
 @app.route("/call/<int:id>", methods=["POST"])
@@ -167,18 +171,22 @@ def call_patient(id):
     conn.commit()
 
     cur.execute("SELECT mobile FROM patients WHERE id=%s", (id,))
-    mobile = cur.fetchone()[0]
+    result = cur.fetchone()
 
     cur.close()
     conn.close()
 
+    if not result:
+        return jsonify({"success": False})
+
     return jsonify({
         "success": True,
-        "mobile": mobile
+        "mobile": result[0]
     })
 
+
 # ==============================
-# COMPLETE
+# COMPLETE PATIENT
 # ==============================
 
 @app.route("/complete/<int:id>", methods=["POST"])
@@ -198,8 +206,9 @@ def complete_patient(id):
 
     return jsonify({"success": True})
 
+
 # ==============================
-# PRINT
+# PRINT RECEIPT
 # ==============================
 
 @app.route("/print/<int:id>")
@@ -209,32 +218,33 @@ def print_receipt(id):
         return redirect(url_for("admin"))
 
     conn = get_db_connection()
-    cur = conn.cursor()
+    cur = conn.cursor(cursor_factory=RealDictCursor)
 
     cur.execute("SELECT * FROM patients WHERE id=%s", (id,))
-    row = cur.fetchone()
+    patient = cur.fetchone()
 
     cur.close()
     conn.close()
 
-    if not row:
+    if not patient:
         return "Patient Not Found", 404
-
-    patient = {
-        "id": row[0],
-        "name": row[1],
-        "age": row[2],
-        "gender": row[3],
-        "address": row[4],
-        "mobile": row[5],
-        "status": row[6],
-        "checkin_time": row[7]
-    }
 
     return render_template("print_receipt.html", patient=patient)
 
+
+# ==============================
+# LOGOUT
+# ==============================
+
+@app.route("/logout")
+def logout():
+    session.clear()
+    return redirect(url_for("admin"))
+
+
+# ==============================
+# RUN (LOCAL ONLY)
 # ==============================
 
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 10000))
-    app.run(host="0.0.0.0", port=port) 
+    app.run(debug=True)
